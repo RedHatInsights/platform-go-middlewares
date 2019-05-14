@@ -5,8 +5,17 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"cloud.redhat.com/entitlements/types"
 )
+
+
+type Internal struct {
+	Org_id string `json:org_id`
+}
+
+type XRhIdentity struct {
+	Account_number string `json:"account_number"`
+	Internal Internal `json:"internal"`
+}
 
 func getErrorText(code int, reason string) string {
 	return http.StatusText(code) + ": " + reason
@@ -33,7 +42,7 @@ func Identity(next http.Handler) http.Handler {
 			return
 		}
 
-		var jsonData types.XRhIdentity
+		var jsonData XRhIdentity
 		err = json.Unmarshal(idRaw, &jsonData)
 		if (err != nil) {
 			doError(w, 400, "x-rh-identity header is does not contain vaild JSON")
