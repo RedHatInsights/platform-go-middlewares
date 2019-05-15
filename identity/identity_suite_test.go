@@ -26,15 +26,23 @@ func GetTestHandler(allowPass bool) http.HandlerFunc {
 	return http.HandlerFunc(fn)
 }
 
-func boiler(req *http.Request, expectedStatusCode int, expectedBody string) *httptest.ResponseRecorder {
+func boilerWithCustomHandler(req *http.Request, expectedStatusCode int, expectedBody string, handlerFunc http.HandlerFunc) {
+	rr := httptest.NewRecorder()
+
+	handler := identity.Identity(handlerFunc)
+	handler.ServeHTTP(rr, req)
+
+	Expect(rr.Code).To(Equal(expectedStatusCode))
+	Expect(rr.Body.String()).To(Equal(expectedBody))
+}
+
+func boiler(req *http.Request, expectedStatusCode int, expectedBody string) {
 	rr := httptest.NewRecorder()
 	handler := identity.Identity(GetTestHandler(expectedStatusCode == 200))
 	handler.ServeHTTP(rr, req)
 
 	Expect(rr.Code).To(Equal(expectedStatusCode))
 	Expect(rr.Body.String()).To(Equal(expectedBody))
-
-	return rr
 }
 
 func getBase64(data string) string {
@@ -48,6 +56,7 @@ func TestIdentity(t *testing.T) {
 
 var _ = Describe("Identity", func() {
 	var req *http.Request
+
 	BeforeEach(func() {
 		r, err := http.NewRequest("GET", "/api/entitlements/v1/services/", nil)
 		if (err != nil) { panic("Test error unable to get a NewRequest") }
@@ -57,7 +66,13 @@ var _ = Describe("Identity", func() {
 	Context("With a valid x-rh-id header", func() {
 		It("should 200 and set the org_id on the context", func() {
 			req.Header.Set("x-rh-identity", getBase64(validJson))
-			boiler(req, 200, "")
+
+			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
+				fn := func(rw http.ResponseWriter, nreq *http.Request) {
+					Expect(nreq.Context().Value("org_id").(string)).To(Equal("1979710"))
+				}
+				return http.HandlerFunc(fn)
+			}())
 		})
 	})
 
