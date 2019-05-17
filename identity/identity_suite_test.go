@@ -32,6 +32,7 @@ func boilerWithCustomHandler(req *http.Request, expectedStatusCode int, expected
 	handler := identity.Identity(handlerFunc)
 	handler.ServeHTTP(rr, req)
 
+	Expect(rr.Body.String()).To(Equal(expectedBody))
 	Expect(rr.Code).To(Equal(expectedStatusCode))
 	Expect(rr.Body.String()).To(Equal(expectedBody))
 }
@@ -70,8 +71,8 @@ var _ = Describe("Identity", func() {
 			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 				fn := func(rw http.ResponseWriter, nreq *http.Request) {
 					id := identity.Get(nreq.Context())
-					Expect(id.Internal.Org_id).To(Equal("1979710"))
-					Expect(id.Account_number).To(Equal("540155"))
+					Expect(id.Internal.OrgID).To(Equal("1979710"))
+					Expect(id.AccountNumber).To(Equal("540155"))
 				}
 				return http.HandlerFunc(fn)
 			}())
