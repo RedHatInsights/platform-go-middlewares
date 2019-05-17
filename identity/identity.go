@@ -7,16 +7,17 @@ import (
 	"encoding/json"
 )
 
-type key int
+type identityKey int
+const key identityKey = iota
 
-const IdentityKey key = iota
-
+// Internal is the "internal" field of an XRHID
 type Internal struct {
-	Org_id string `json:org_id`
+	OrgID string `json:"org_id"`
 }
 
-type XRhIdentity struct {
-	Account_number string `json:"account_number"`
+// XRHID is the "identity" pricipal object set by Cloud Platform 3scale
+type XRHID struct {
+	AccountNumber string `json:"account_number"`
 	Internal Internal `json:"internal"`
 }
 
@@ -29,8 +30,8 @@ func doError(w http.ResponseWriter, code int, reason string) {
 }
 
 // Get returns the identity struct from the context
-func Get(ctx context.Context) XRhIdentity {
-	return ctx.Value(IdentityKey).(XRhIdentity)
+func Get(ctx context.Context) XRHID {
+	return ctx.Value(key).(XRHID)
 }
 
 // Identity extracts the X-Rh-Identity header and places the contents into the
@@ -52,24 +53,24 @@ func Identity(next http.Handler) http.Handler {
 			return
 		}
 
-		var jsonData XRhIdentity
+		var jsonData XRHID
 		err = json.Unmarshal(idRaw, &jsonData)
 		if (err != nil) {
 			doError(w, 400, "x-rh-identity header is does not contain vaild JSON")
 			return
 		}
 
-		if (jsonData.Account_number == "" || jsonData.Account_number == "-1") {
+		if (jsonData.AccountNumber == "" || jsonData.AccountNumber == "-1") {
 			doError(w, 400, "x-rh-identity header has an invalid or missing account number")
 			return
 		}
 
-		if (jsonData.Internal.Org_id == "") {
+		if (jsonData.Internal.OrgID == "") {
 			doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), IdentityKey, jsonData)
+		ctx := context.WithValue(r.Context(), key, jsonData)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
