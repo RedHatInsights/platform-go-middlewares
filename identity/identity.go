@@ -7,16 +7,16 @@ import (
 	"encoding/json"
 )
 
-type key int
+type key int 
 
-const IdentityKey key = iota
+const identityKey key = iota
 
 type Internal struct {
-	Org_id string `json:org_id`
+	OrgId string `json:"org_id"`
 }
 
 type XRhIdentity struct {
-	Account_number string `json:"account_number"`
+	AccountNumber string `json:"account_number"`
 	Internal Internal `json:"internal"`
 }
 
@@ -30,7 +30,7 @@ func doError(w http.ResponseWriter, code int, reason string) {
 
 // Get returns the identity struct from the context
 func Get(ctx context.Context) XRhIdentity {
-	return ctx.Value(IdentityKey).(XRhIdentity)
+	return ctx.Value(identityKey).(XRhIdentity)
 }
 
 // Identity extracts the X-Rh-Identity header and places the contents into the
@@ -59,17 +59,17 @@ func Identity(next http.Handler) http.Handler {
 			return
 		}
 
-		if (jsonData.Account_number == "" || jsonData.Account_number == "-1") {
+		if (jsonData.AccountNumber == "" || jsonData.AccountNumber == "-1") {
 			doError(w, 400, "x-rh-identity header has an invalid or missing account number")
 			return
 		}
 
-		if (jsonData.Internal.Org_id == "") {
+		if (jsonData.Internal.OrgId == "") {
 			doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), IdentityKey, jsonData)
+		ctx := context.WithValue(r.Context(), identityKey, jsonData)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
