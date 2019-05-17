@@ -7,6 +7,12 @@ import (
 	"encoding/json"
 )
 
+type key int
+
+const (
+	 AccountNumber key = iota
+	 OrgId key = iota
+)
 
 type Internal struct {
 	Org_id string `json:org_id`
@@ -25,6 +31,9 @@ func doError(w http.ResponseWriter, code int, reason string) {
 	http.Error(w, getErrorText(code, reason), code)
 }
 
+
+// Identity extracts the X-Rh-Identity header and places the contents into the
+// request context
 func Identity(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rawHeaders := r.Header["X-Rh-Identity"]
@@ -59,7 +68,8 @@ func Identity(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "org_id", jsonData.Internal.Org_id)
+		ctx := context.WithValue(r.Context(), OrgId, jsonData.Internal.Org_id)
+		ctx = context.WithValue(ctx, AccountNumber, jsonData.Account_number)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
