@@ -9,10 +9,7 @@ import (
 
 type key int
 
-const (
-	 AccountNumber key = iota
-	 OrgId key = iota
-)
+const IdentityKey key = iota
 
 type Internal struct {
 	Org_id string `json:org_id`
@@ -31,6 +28,10 @@ func doError(w http.ResponseWriter, code int, reason string) {
 	http.Error(w, getErrorText(code, reason), code)
 }
 
+// Get returns the identity struct from the context
+func Get(ctx context.Context) XRhIdentity {
+	return ctx.Value(IdentityKey).(XRhIdentity)
+}
 
 // Identity extracts the X-Rh-Identity header and places the contents into the
 // request context
@@ -68,8 +69,7 @@ func Identity(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), OrgId, jsonData.Internal.Org_id)
-		ctx = context.WithValue(ctx, AccountNumber, jsonData.Account_number)
+		ctx := context.WithValue(r.Context(), IdentityKey, jsonData)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
