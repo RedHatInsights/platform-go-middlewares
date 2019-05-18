@@ -9,7 +9,7 @@ import (
 
 type identityKey int
 
-const key identityKey = iota
+const Key identityKey = iota
 
 // Internal is the "internal" field of an XRHID
 type Internal struct {
@@ -32,7 +32,7 @@ func doError(w http.ResponseWriter, code int, reason string) {
 
 // Get returns the identity struct from the context
 func Get(ctx context.Context) XRHID {
-	return ctx.Value(key).(XRHID)
+	return ctx.Value(Key).(XRHID)
 }
 
 // Identity extracts the X-Rh-Identity header and places the contents into the
@@ -71,7 +71,7 @@ func Identity(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), key, jsonData)
+		ctx := context.WithValue(r.Context(), Key, jsonData)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
