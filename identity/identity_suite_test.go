@@ -70,7 +70,8 @@ var _ = Describe("Identity", func() {
 
 			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 				fn := func(rw http.ResponseWriter, nreq *http.Request) {
-					id := identity.Get(nreq.Context())
+					id, err := identity.Get(nreq.Context())
+					Expect(err).To(BeNil())
 					Expect(id.Internal.OrgID).To(Equal("1979710"))
 					Expect(id.AccountNumber).To(Equal("540155"))
 				}
