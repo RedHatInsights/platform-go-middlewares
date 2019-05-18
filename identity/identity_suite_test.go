@@ -1,13 +1,12 @@
 package identity_test
 
 import (
-	"testing"
+	"encoding/base64"
+	"github.com/RedHatInsights/platform-go-middlewares/identity"
 	"net/http"
 	"net/http/httptest"
-	"encoding/base64"
 	"strings"
-	"github.com/RedHatInsights/platform-go-middlewares/identity"
-
+	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -15,10 +14,9 @@ import (
 
 const validJson = `{ "account_number": "540155", "type": "User", "internal": { "org_id": "1979710" } }`
 
-
 func GetTestHandler(allowPass bool) http.HandlerFunc {
 	fn := func(rw http.ResponseWriter, req *http.Request) {
-		if (!allowPass) {
+		if !allowPass {
 			panic("test entered test handler, this should not happen")
 		}
 	}
@@ -60,7 +58,9 @@ var _ = Describe("Identity", func() {
 
 	BeforeEach(func() {
 		r, err := http.NewRequest("GET", "/api/entitlements/v1/services/", nil)
-		if (err != nil) { panic("Test error unable to get a NewRequest") }
+		if err != nil {
+			panic("Test error unable to get a NewRequest")
+		}
 		req = r
 	})
 
@@ -87,14 +87,14 @@ var _ = Describe("Identity", func() {
 
 	Context("With invalid b64 data in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
-			req.Header.Set("x-rh-identity", "=" + getBase64(validJson))
+			req.Header.Set("x-rh-identity", "="+getBase64(validJson))
 			boiler(req, 400, "Bad Request: unable to b64 decode x-rh-identity header\n")
 		})
 	})
 
 	Context("With invalid json data (valid b64) in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
-			req.Header.Set("x-rh-identity", getBase64(validJson + "}"))
+			req.Header.Set("x-rh-identity", getBase64(validJson+"}"))
 			boiler(req, 400, "Bad Request: x-rh-identity header is does not contain vaild JSON\n")
 		})
 	})

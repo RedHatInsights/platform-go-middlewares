@@ -1,13 +1,14 @@
 package identity
 
 import (
-	"net/http"
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"net/http"
 )
 
 type identityKey int
+
 const key identityKey = iota
 
 // Internal is the "internal" field of an XRHID
@@ -17,8 +18,8 @@ type Internal struct {
 
 // XRHID is the "identity" pricipal object set by Cloud Platform 3scale
 type XRHID struct {
-	AccountNumber string `json:"account_number"`
-	Internal Internal `json:"internal"`
+	AccountNumber string   `json:"account_number"`
+	Internal      Internal `json:"internal"`
 }
 
 func getErrorText(code int, reason string) string {
@@ -41,31 +42,31 @@ func Identity(next http.Handler) http.Handler {
 		rawHeaders := r.Header["X-Rh-Identity"]
 
 		// must have an x-rh-id header
-		if (len(rawHeaders) != 1) {
+		if len(rawHeaders) != 1 {
 			doError(w, 400, "missing x-rh-identity header")
 			return
 		}
 
 		// must be able to base64 decode header
 		idRaw, err := base64.StdEncoding.DecodeString(rawHeaders[0])
-		if (err != nil) {
+		if err != nil {
 			doError(w, 400, "unable to b64 decode x-rh-identity header")
 			return
 		}
 
 		var jsonData XRHID
 		err = json.Unmarshal(idRaw, &jsonData)
-		if (err != nil) {
+		if err != nil {
 			doError(w, 400, "x-rh-identity header is does not contain vaild JSON")
 			return
 		}
 
-		if (jsonData.AccountNumber == "" || jsonData.AccountNumber == "-1") {
+		if jsonData.AccountNumber == "" || jsonData.AccountNumber == "-1" {
 			doError(w, 400, "x-rh-identity header has an invalid or missing account number")
 			return
 		}
 
-		if (jsonData.Internal.OrgID == "") {
+		if jsonData.Internal.OrgID == "" {
 			doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
 			return
 		}
