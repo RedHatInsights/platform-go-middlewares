@@ -9,6 +9,7 @@ import (
 
 type identityKey int
 
+// Key the key for the XRHID in that gets added to the context
 const Key identityKey = iota
 
 // Internal is the "internal" field of an XRHID
