@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
@@ -32,8 +33,11 @@ func doError(w http.ResponseWriter, code int, reason string) {
 }
 
 // Get returns the identity struct from the context
-func Get(ctx context.Context) XRHID {
-	return ctx.Value(Key).(XRHID)
+func Get(ctx context.Context) (XRHID, error) {
+	if v := ctx.Value(Key); v != nil {
+		return v.(XRHID), nil
+	}
+	return XRHID{}, errors.New("No Identity object could be found")
 }
 
 // Identity extracts the X-Rh-Identity header and places the contents into the
