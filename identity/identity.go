@@ -17,14 +17,14 @@ type Internal struct {
 	OrgID string `json:"org_id"`
 }
 
-type Root struct {
+type Identity struct {
 	AccountNumber string   `json:"account_number"`
 	Internal      Internal `json:"internal"`
 }
 
 // XRHID is the "identity" pricipal object set by Cloud Platform 3scale
 type XRHID struct {
-	Root          Root     `json:"identity"`
+	Identity Identity     `json:"identity"`
 }
 
 func getErrorText(code int, reason string) string {
@@ -42,7 +42,7 @@ func Get(ctx context.Context) XRHID {
 
 // Identity extracts the X-Rh-Identity header and places the contents into the
 // request context
-func Identity(next http.Handler) http.Handler {
+func EnforceIdentity(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rawHeaders := r.Header["X-Rh-Identity"]
 
@@ -66,12 +66,12 @@ func Identity(next http.Handler) http.Handler {
 			return
 		}
 
-		if jsonData.Root.AccountNumber == "" || jsonData.Root.AccountNumber == "-1" {
+		if jsonData.Identity.AccountNumber == "" || jsonData.Identity.AccountNumber == "-1" {
 			doError(w, 400, "x-rh-identity header has an invalid or missing account number")
 			return
 		}
 
-		if jsonData.Root.Internal.OrgID == "" {
+		if jsonData.Identity.Internal.OrgID == "" {
 			doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
 			return
 		}

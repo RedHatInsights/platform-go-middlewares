@@ -27,7 +27,7 @@ func GetTestHandler(allowPass bool) http.HandlerFunc {
 func boilerWithCustomHandler(req *http.Request, expectedStatusCode int, expectedBody string, handlerFunc http.HandlerFunc) {
 	rr := httptest.NewRecorder()
 
-	handler := identity.Identity(handlerFunc)
+	handler := identity.EnforceIdentity(handlerFunc)
 	handler.ServeHTTP(rr, req)
 
 	Expect(rr.Body.String()).To(Equal(expectedBody))
@@ -37,7 +37,7 @@ func boilerWithCustomHandler(req *http.Request, expectedStatusCode int, expected
 
 func boiler(req *http.Request, expectedStatusCode int, expectedBody string) {
 	rr := httptest.NewRecorder()
-	handler := identity.Identity(GetTestHandler(expectedStatusCode == 200))
+	handler := identity.EnforceIdentity(GetTestHandler(expectedStatusCode == 200))
 	handler.ServeHTTP(rr, req)
 
 	Expect(rr.Code).To(Equal(expectedStatusCode))
@@ -71,8 +71,8 @@ var _ = Describe("Identity", func() {
 			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 				fn := func(rw http.ResponseWriter, nreq *http.Request) {
 					id := identity.Get(nreq.Context())
-					Expect(id.Root.Internal.OrgID).To(Equal("1979710"))
-					Expect(id.Root.AccountNumber).To(Equal("540155"))
+					Expect(id.Identity.Internal.OrgID).To(Equal("1979710"))
+					Expect(id.Identity.AccountNumber).To(Equal("540155"))
 				}
 				return http.HandlerFunc(fn)
 			}())
