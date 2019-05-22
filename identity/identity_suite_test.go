@@ -12,7 +12,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const validJson = `{ "account_number": "540155", "type": "User", "internal": { "org_id": "1979710" } }`
+const validJson = `{ "identity": {"account_number": "540155", "type": "User", "internal": { "org_id": "1979710" } } }`
 
 func GetTestHandler(allowPass bool) http.HandlerFunc {
 	fn := func(rw http.ResponseWriter, req *http.Request) {
@@ -71,8 +71,8 @@ var _ = Describe("Identity", func() {
 			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 				fn := func(rw http.ResponseWriter, nreq *http.Request) {
 					id := identity.Get(nreq.Context())
-					Expect(id.Internal.OrgID).To(Equal("1979710"))
-					Expect(id.AccountNumber).To(Equal("540155"))
+					Expect(id.Root.Internal.OrgID).To(Equal("1979710"))
+					Expect(id.Root.AccountNumber).To(Equal("540155"))
 				}
 				return http.HandlerFunc(fn)
 			}())
@@ -95,7 +95,7 @@ var _ = Describe("Identity", func() {
 	Context("With invalid json data (valid b64) in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			req.Header.Set("x-rh-identity", getBase64(validJson+"}"))
-			boiler(req, 400, "Bad Request: x-rh-identity header is does not contain vaild JSON\n")
+			boiler(req, 400, "Bad Request: x-rh-identity header is does not contain valid JSON\n")
 		})
 	})
 

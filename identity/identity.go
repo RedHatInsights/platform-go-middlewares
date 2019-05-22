@@ -17,10 +17,14 @@ type Internal struct {
 	OrgID string `json:"org_id"`
 }
 
-// XRHID is the "identity" pricipal object set by Cloud Platform 3scale
-type XRHID struct {
+type Root struct {
 	AccountNumber string   `json:"account_number"`
 	Internal      Internal `json:"internal"`
+}
+
+// XRHID is the "identity" pricipal object set by Cloud Platform 3scale
+type XRHID struct {
+	Root          Root     `json:"identity"`
 }
 
 func getErrorText(code int, reason string) string {
@@ -58,16 +62,16 @@ func Identity(next http.Handler) http.Handler {
 		var jsonData XRHID
 		err = json.Unmarshal(idRaw, &jsonData)
 		if err != nil {
-			doError(w, 400, "x-rh-identity header is does not contain vaild JSON")
+			doError(w, 400, "x-rh-identity header is does not contain valid JSON")
 			return
 		}
 
-		if jsonData.AccountNumber == "" || jsonData.AccountNumber == "-1" {
+		if jsonData.Root.AccountNumber == "" || jsonData.Root.AccountNumber == "-1" {
 			doError(w, 400, "x-rh-identity header has an invalid or missing account number")
 			return
 		}
 
-		if jsonData.Internal.OrgID == "" {
+		if jsonData.Root.Internal.OrgID == "" {
 			doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
 			return
 		}
