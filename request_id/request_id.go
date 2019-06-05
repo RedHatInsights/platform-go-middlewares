@@ -76,6 +76,7 @@ func ConfiguredRequestID(header string) func(next http.Handler) http.Handler {
 				requestID = fmt.Sprintf("%s-%06d", prefix, myid)
 			}
 			ctx = context.WithValue(ctx, RequestIDKey, requestID)
+			w.Header().Set(header, requestID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 		return http.HandlerFunc(fn2)
@@ -93,9 +94,4 @@ func GetReqID(ctx context.Context) string {
 		return reqID
 	}
 	return ""
-}
-
-// NextRequestID generates the next request ID in the sequence.
-func NextRequestID() uint64 {
-	return atomic.AddUint64(&reqid, 1)
 }
