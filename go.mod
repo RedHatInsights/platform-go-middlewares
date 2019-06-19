@@ -1,4 +1,4 @@
-module github.com/RedHatInsights/platform-go-middlewares
+module github.com/redhatinsights/platform-go-middlewares
 
 require (
 	github.com/go-chi/chi v4.0.2+incompatible
