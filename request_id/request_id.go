@@ -76,7 +76,6 @@ func ConfiguredRequestID(header string) func(next http.Handler) http.Handler {
 				requestID = fmt.Sprintf("%s-%06d", prefix, myid)
 			}
 			ctx = context.WithValue(ctx, RequestIDKey, requestID)
-			w.Header().Set(header, requestID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
 		return http.HandlerFunc(fn2)

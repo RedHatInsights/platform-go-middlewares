@@ -37,14 +37,6 @@ var _ = Describe("Request ID", func() {
 		rr = httptest.NewRecorder()
 	})
 
-	Context("With No X-Request-Id header", func() {
-		It("should add in a header", func() {
-			handler := request_id.RequestID(getHandlerFunc(true))
-			handler.ServeHTTP(rr, req)
-			Expect(rr.Header().Get("X-Request-Id")).NotTo(Equal(""))
-		})
-	})
-
 	Context("With an already set X-Request-Id header", func() {
 		It("should preserve the header", func() {
 			req.Header.Set("X-Request-Id", "testing")
@@ -54,19 +46,10 @@ var _ = Describe("Request ID", func() {
 		})
 	})
 
-	Context("With every request", func() {
-		It("should put a header in the response", func() {
-			handler := request_id.RequestID(getHandlerFunc(true))
-			handler.ServeHTTP(rr, req)
-			Expect(rr.Header().Get("X-Request-Id")).NotTo(BeNil())
-		})
-	})
-
 	Context("With ConfiguredRequestID", func() {
 		It("can be set to use a different header", func() {
 			handler := request_id.ConfiguredRequestID("X-Rh-Request-Id")(getHandlerFunc(true))
 			handler.ServeHTTP(rr, req)
-			Expect(rr.Header().Get("X-Request-Id")).To(Equal(""))
 			Expect(rr.Header().Get("X-Rh-Request-Id")).NotTo(Equal(""))
 		})
 	})
