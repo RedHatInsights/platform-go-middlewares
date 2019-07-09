@@ -17,14 +17,29 @@ type Internal struct {
 	OrgID string `json:"org_id"`
 }
 
+// User is the "user" field of an XRHID
+type User struct {
+	Username  string `json:"username"`
+	Email     string `json:"email"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Active    bool   `json:"is_active"`
+	OrgAdmin  bool   `json:"is_org_admin"`
+	Internal  bool   `json:"is_internal"`
+	Locale    string `json:"locale"`
+}
+
+// Identity is the main body of the XRHID
 type Identity struct {
-	AccountNumber string   `json:"account_number"`
-	Internal      Internal `json:"internal"`
+	AccountNumber string                 `json:"account_number"`
+	Internal      Internal               `json:"internal"`
+	User          User                   `json:"user,omitempty"`
+	System        map[string]interface{} `json:"system,omitempty"`
 }
 
 // XRHID is the "identity" pricipal object set by Cloud Platform 3scale
 type XRHID struct {
-	Identity Identity     `json:"identity"`
+	Identity Identity `json:"identity"`
 }
 
 func getErrorText(code int, reason string) string {
@@ -40,8 +55,8 @@ func Get(ctx context.Context) XRHID {
 	return ctx.Value(Key).(XRHID)
 }
 
-// Identity extracts the X-Rh-Identity header and places the contents into the
-// request context
+// EnforceIdentity extracts the X-Rh-Identity header and places the contents into the
+// request context.  If the Identity is invalid, the request will be aborted.
 func EnforceIdentity(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		rawHeaders := r.Header["X-Rh-Identity"]

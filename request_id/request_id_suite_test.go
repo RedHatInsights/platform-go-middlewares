@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/RedHatInsights/platform-go-middlewares/request_id"
+	"github.com/redhatinsights/platform-go-middlewares/request_id"
 )
 
 func TestRequestId(t *testing.T) {
