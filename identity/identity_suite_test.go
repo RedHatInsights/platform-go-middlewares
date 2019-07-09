@@ -2,11 +2,12 @@ package identity_test
 
 import (
 	"encoding/base64"
-	"github.com/RedHatInsights/platform-go-middlewares/identity"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/redhatinsights/platform-go-middlewares/identity"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
