@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/middleware"
+	"github.com/redhatinsights/platform-go-middlewares/request_id"
 	"go.uber.org/zap"
 )
 
@@ -26,7 +27,7 @@ func Logger(l *zap.Logger) func(next http.Handler) http.Handler {
 					zap.Duration("duration", time.Since(t1)),
 					zap.Int("status", ww.Status()),
 					zap.Int("size", ww.BytesWritten()),
-					zap.String("request_id", middleware.GetReqID(r.Context())))
+					zap.String("request_id", request_id.GetReqID(r.Context())))
 			}()
 
 			next.ServeHTTP(ww, r)
