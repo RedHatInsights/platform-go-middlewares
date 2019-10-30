@@ -1,4 +1,4 @@
-package logging
+package cloudwatch 
 
 import (
 	"fmt"
