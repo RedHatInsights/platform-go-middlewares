@@ -13,7 +13,10 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-const validJson = `{ "identity": {"account_number": "540155", "type": "User", "internal": { "org_id": "1979710" } } }`
+var validJson = [...]string{
+	`{ "identity": {"account_number": "540155", "type": "User", "internal": { "org_id": "1979710" } } }`,
+	`{ "identity": {"account_number": "540155", "type": "Associate", "internal": { "org_id": "1979710" } } }`,
+}
 
 func GetTestHandler(allowPass bool) http.HandlerFunc {
 	fn := func(rw http.ResponseWriter, req *http.Request) {
@@ -67,16 +70,18 @@ var _ = Describe("Identity", func() {
 
 	Context("With a valid x-rh-id header", func() {
 		It("should 200 and set the org_id on the context", func() {
-			req.Header.Set("x-rh-identity", getBase64(validJson))
+			for _, jsonIdentity := range validJson {
+				req.Header.Set("x-rh-identity", getBase64(jsonIdentity))
 
-			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
-				fn := func(rw http.ResponseWriter, nreq *http.Request) {
-					id := identity.Get(nreq.Context())
-					Expect(id.Identity.Internal.OrgID).To(Equal("1979710"))
-					Expect(id.Identity.AccountNumber).To(Equal("540155"))
-				}
-				return http.HandlerFunc(fn)
-			}())
+				boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
+					fn := func(rw http.ResponseWriter, nreq *http.Request) {
+						id := identity.Get(nreq.Context())
+						Expect(id.Identity.Internal.OrgID).To(Equal("1979710"))
+						Expect(id.Identity.AccountNumber).To(Equal("540155"))
+					}
+					return http.HandlerFunc(fn)
+				}())
+			}
 		})
 	})
 
@@ -88,15 +93,19 @@ var _ = Describe("Identity", func() {
 
 	Context("With invalid b64 data in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
-			req.Header.Set("x-rh-identity", "="+getBase64(validJson))
-			boiler(req, 400, "Bad Request: unable to b64 decode x-rh-identity header\n")
+			for _, jsonIdentity := range validJson {
+				req.Header.Set("x-rh-identity", "="+getBase64(jsonIdentity))
+				boiler(req, 400, "Bad Request: unable to b64 decode x-rh-identity header\n")
+			}
 		})
 	})
 
 	Context("With invalid json data (valid b64) in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
-			req.Header.Set("x-rh-identity", getBase64(validJson+"}"))
-			boiler(req, 400, "Bad Request: x-rh-identity header is does not contain valid JSON\n")
+			for _, jsonIdentity := range validJson {
+				req.Header.Set("x-rh-identity", getBase64(jsonIdentity+"}"))
+				boiler(req, 400, "Bad Request: x-rh-identity header is does not contain valid JSON\n")
+			}
 		})
 	})
 
@@ -109,15 +118,19 @@ var _ = Describe("Identity", func() {
 
 	Context("With a -1 account_number in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
-			req.Header.Set("x-rh-identity", getBase64(strings.Replace(validJson, "540155", "-1", 1)))
-			boiler(req, 400, "Bad Request: x-rh-identity header has an invalid or missing account number\n")
+			for _, jsonIdentity := range validJson {
+				req.Header.Set("x-rh-identity", getBase64(strings.Replace(jsonIdentity, "540155", "-1", 1)))
+				boiler(req, 400, "Bad Request: x-rh-identity header has an invalid or missing account number\n")
+			}
 		})
 	})
 
 	Context("With missing org_id in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
-			req.Header.Set("x-rh-identity", getBase64(strings.Replace(validJson, `"org_id": "1979710"`, "", 1)))
-			boiler(req, 400, "Bad Request: x-rh-identity header has an invalid or missing org_id\n")
+			for _, jsonIdentity := range validJson {
+				req.Header.Set("x-rh-identity", getBase64(strings.Replace(jsonIdentity, `"org_id": "1979710"`, "", 1)))
+				boiler(req, 400, "Bad Request: x-rh-identity header has an invalid or missing org_id\n")
+			}
 		})
 	})
 })

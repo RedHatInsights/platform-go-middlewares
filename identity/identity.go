@@ -29,11 +29,21 @@ type User struct {
 	Locale    string `json:"locale"`
 }
 
+// Associate is the "associate" field of an XRHID
+type Associate struct {
+	Role      []string `json:"Role"`
+	Email     string   `json:"email"`
+	GivenName string   `json:"givenName"`
+	RHatUUID  string   `json:"rhatUUID"`
+	Surname   string   `json:"surname"`
+}
+
 // Identity is the main body of the XRHID
 type Identity struct {
 	AccountNumber string                 `json:"account_number"`
 	Internal      Internal               `json:"internal"`
 	User          User                   `json:"user,omitempty"`
+	Associate     Associate              `json:"associate,omitempty"`
 	System        map[string]interface{} `json:"system,omitempty"`
 }
 
