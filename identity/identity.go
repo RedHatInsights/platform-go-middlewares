@@ -45,6 +45,7 @@ type Identity struct {
 	User          User                   `json:"user,omitempty"`
 	Associate     Associate              `json:"associate,omitempty"`
 	System        map[string]interface{} `json:"system,omitempty"`
+	Type          string                 `json:"type"`
 }
 
 // XRHID is the "identity" pricipal object set by Cloud Platform 3scale
