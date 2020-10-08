@@ -133,4 +133,11 @@ var _ = Describe("Identity", func() {
 			}
 		})
 	})
+
+	Context("With missing type in the x-rh-id header", func() {
+		It("should throw a 400 with a descriptive message", func() {
+			req.Header.Set("x-rh-identity", getBase64(`{"identity":{"account_number":"540155","type":"", "internal":{"org_id":"1979710"}}}`))
+			boiler(req, 400, "Bad Request: x-rh-identity header is missing type\n")
+		})
+	})
 })
