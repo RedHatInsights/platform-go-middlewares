@@ -38,13 +38,20 @@ type Associate struct {
 	Surname   string   `json:"surname"`
 }
 
+// X509 is the "x509" field of an XRHID
+type X509 struct {
+	SubjectDN string `json:"subject_dn"`
+	IssuerDN  string `json:"issuer_dn"`
+}
+
 // Identity is the main body of the XRHID
 type Identity struct {
 	AccountNumber string                 `json:"account_number"`
 	Internal      Internal               `json:"internal"`
 	User          User                   `json:"user,omitempty"`
-	Associate     Associate              `json:"associate,omitempty"`
 	System        map[string]interface{} `json:"system,omitempty"`
+	Associate     Associate              `json:"associate,omitempty"`
+	X509          X509                   `json:"x509,omitempty"`
 	Type          string                 `json:"type"`
 }
 
@@ -99,6 +106,11 @@ func EnforceIdentity(next http.Handler) http.Handler {
 
 		if jsonData.Identity.Internal.OrgID == "" {
 			doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
+			return
+		}
+
+		if jsonData.Identity.Type == "" {
+			doError(w, 400, "x-rh-identity header is missing type")
 			return
 		}
 
