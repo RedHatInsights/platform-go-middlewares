@@ -161,7 +161,6 @@ func (h *Hook) putBatches(flush <-chan bool, ticker <-chan time.Time) {
 
 func (h *Hook) sendBatch(batch []*cloudwatchlogs.InputLogEvent) {
 	h.m.Lock()
-	defer h.m.Unlock()
 
 	if len(batch) == 0 {
 		return
@@ -173,11 +172,21 @@ func (h *Hook) sendBatch(batch []*cloudwatchlogs.InputLogEvent) {
 		SequenceToken: h.nextSequenceToken,
 	}
 	resp, err := h.svc.PutLogEvents(params)
-	if err != nil {
-		h.err = &err
-	} else {
-		h.nextSequenceToken = resp.NextSequenceToken
+	if err == nil {
+		h.NextSequenceToken = resp.NextSequenceToken
+		h.m.Unlock()
+		return
 	}
+
+	h.err = &err
+	if aerr, ok := err.(*cloudwatchlogs.InvalidSequenceTokenException); ok {
+		h.nextSequenceToken = aerr.ExpectedSequenceToken
+		h.m.Unlock()
+		h.sendBatch()
+		return
+	}
+	
+	h.m.Unlock()
 }
 
 func (h *Hook) Write(p []byte) (n int, err error) {
