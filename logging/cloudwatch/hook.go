@@ -173,7 +173,7 @@ func (h *Hook) sendBatch(batch []*cloudwatchlogs.InputLogEvent) {
 	}
 	resp, err := h.svc.PutLogEvents(params)
 	if err == nil {
-		h.NextSequenceToken = resp.NextSequenceToken
+		h.nextSequenceToken = resp.NextSequenceToken
 		h.m.Unlock()
 		return
 	}
@@ -182,7 +182,7 @@ func (h *Hook) sendBatch(batch []*cloudwatchlogs.InputLogEvent) {
 	if aerr, ok := err.(*cloudwatchlogs.InvalidSequenceTokenException); ok {
 		h.nextSequenceToken = aerr.ExpectedSequenceToken
 		h.m.Unlock()
-		h.sendBatch()
+		h.sendBatch(batch)
 		return
 	}
 	
