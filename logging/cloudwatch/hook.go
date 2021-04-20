@@ -163,6 +163,7 @@ func (h *Hook) sendBatch(batch []*cloudwatchlogs.InputLogEvent) {
 	h.m.Lock()
 
 	if len(batch) == 0 {
+		h.m.Unlock()
 		return
 	}
 	params := &cloudwatchlogs.PutLogEventsInput{
