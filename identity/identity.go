@@ -65,8 +65,9 @@ func getErrorText(code int, reason string) string {
 	return http.StatusText(code) + ": " + reason
 }
 
-func doError(w http.ResponseWriter, code int, reason string) {
+func doError(w http.ResponseWriter, code int, reason string) error {
 	http.Error(w, getErrorText(code, reason), code)
+	return errors.New(reason)
 }
 
 // Get returns the identity struct from the context
@@ -76,34 +77,23 @@ func Get(ctx context.Context) XRHID {
 
 func (j *XRHID) checkHeader(w http.ResponseWriter) error {
 
-	var error_count int = 0 // number of errors encountered
+	if j.Identity.Type == "Associate" {
+		return nil
+	}
 
 	if j.Identity.AccountNumber == "" || j.Identity.AccountNumber == "-1" {
-		doError(w, 400, "x-rh-identity header has an invalid or missing account number")
-		error_count++
+		return doError(w, 400, "x-rh-identity header has an invalid or missing account number")
 	}
 
 	if j.Identity.Internal.OrgID == "" {
-		doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
-		error_count++
+		return doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
 	}
 
 	if j.Identity.Type == "" {
-		doError(w, 400, "x-rh-identity header is missing type")
-		error_count++
-	}
-
-	// If the type of "Associate" is in place, this is a Turnpike internal request
-	if j.Identity.Type == "Associate" {
-		error_count = 0
-	}
-
-	if error_count> 0 {
-		return errors.New("failed identity header check")
+		return doError(w, 400, "x-rh-identity header is missing type")
 	}
 
 	return nil
-
 }
 
 
