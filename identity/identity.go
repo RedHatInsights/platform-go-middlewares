@@ -5,12 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 )
 
 type identityKey int
 
- // Internal is the "internal" field of an XRHID
+// Internal is the "internal" field of an XRHID
 type Internal struct {
 	OrgID string `json:"org_id"`
 }
@@ -75,7 +76,12 @@ func Get(ctx context.Context) XRHID {
 	return ctx.Value(Key).(XRHID)
 }
 
-func (j *XRHID) checkHeader(w http.ResponseWriter) error {
+func GetCheck(ctx context.Context) (XRHID, bool) {
+	x, ok := ctx.Value(Key).(XRHID)
+	return x, ok
+}
+
+func checkHeader(j XRHID, w http.ResponseWriter) error {
 
 	if j.Identity.Type == "Associate" {
 		return nil
@@ -96,6 +102,55 @@ func (j *XRHID) checkHeader(w http.ResponseWriter) error {
 	return nil
 }
 
+func FromString(s string) (XRHID, error) {
+	r, err := base64.StdEncoding.DecodeString(s)
+	if err != nil {
+		return XRHID{}, fmt.Errorf("unable to b64 decode x-rh-identity header: %w", err)
+	}
+
+	var x XRHID
+	err = json.Unmarshal(r, &x)
+	if err != nil {
+		return XRHID{}, fmt.Errorf("x-rh-identity header is does not contain valid JSON: %w", err)
+	}
+	return x, nil
+}
+
+func UnpackIdentity(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		rawHeaders, ok := r.Header["X-Rh-Identity"]
+
+		// must have an x-rh-id header
+		if !ok {
+			doError(w, 400, "missing x-rh-identity header")
+			return
+		}
+
+		xrhid, err := FromString(rawHeaders[0])
+		if err != nil {
+			doError(w, 400, err.Error())
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), Key, xrhid)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+func Enforce(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		xrhid, ok := GetCheck(r.Context())
+		if !ok {
+			doError(w, 401, "missing identity")
+			return
+		}
+
+		if err := checkHeader(xrhid, w); err != nil {
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
 
 // EnforceIdentity extracts the X-Rh-Identity header and places the contents into the
 // request context.  If the Identity is invalid, the request will be aborted.
@@ -123,7 +178,7 @@ func EnforceIdentity(next http.Handler) http.Handler {
 			return
 		}
 
-		err = jsonData.checkHeader(w)
+		err = checkHeader(jsonData, w)
 		if err != nil {
 			return
 		}
