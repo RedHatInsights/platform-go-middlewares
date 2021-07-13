@@ -75,21 +75,21 @@ func Get(ctx context.Context) XRHID {
 	return ctx.Value(Key).(XRHID)
 }
 
-func (j *XRHID) checkHeader(w http.ResponseWriter) error {
+func checkHeader(id *XRHID, w http.ResponseWriter) error {
 
-	if j.Identity.Type == "Associate" {
+	if id.Identity.Type == "Associate" && id.Identity.AccountNumber == "" {
 		return nil
 	}
 
-	if j.Identity.AccountNumber == "" || j.Identity.AccountNumber == "-1" {
+	if id.Identity.AccountNumber == "" || id.Identity.AccountNumber == "-1" {
 		return doError(w, 400, "x-rh-identity header has an invalid or missing account number")
 	}
 
-	if j.Identity.Internal.OrgID == "" {
+	if id.Identity.Internal.OrgID == "" {
 		return doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
 	}
 
-	if j.Identity.Type == "" {
+	if id.Identity.Type == "" {
 		return doError(w, 400, "x-rh-identity header is missing type")
 	}
 
@@ -123,7 +123,7 @@ func EnforceIdentity(next http.Handler) http.Handler {
 			return
 		}
 
-		err = jsonData.checkHeader(w)
+		err = checkHeader(&jsonData, w)
 		if err != nil {
 			return
 		}
