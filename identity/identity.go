@@ -4,15 +4,13 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"net/http"
 )
 
 type identityKey int
 
-// Key the key for the XRHID in that gets added to the context
-const Key identityKey = iota
-
-// Internal is the "internal" field of an XRHID
+ // Internal is the "internal" field of an XRHID
 type Internal struct {
 	OrgID string `json:"org_id"`
 }
@@ -60,18 +58,44 @@ type XRHID struct {
 	Identity Identity `json:"identity"`
 }
 
+// Key the key for the XRHID in that gets added to the context
+const Key identityKey = iota
+
 func getErrorText(code int, reason string) string {
 	return http.StatusText(code) + ": " + reason
 }
 
-func doError(w http.ResponseWriter, code int, reason string) {
+func doError(w http.ResponseWriter, code int, reason string) error {
 	http.Error(w, getErrorText(code, reason), code)
+	return errors.New(reason)
 }
 
 // Get returns the identity struct from the context
 func Get(ctx context.Context) XRHID {
 	return ctx.Value(Key).(XRHID)
 }
+
+func (j *XRHID) checkHeader(w http.ResponseWriter) error {
+
+	if j.Identity.Type == "Associate" {
+		return nil
+	}
+
+	if j.Identity.AccountNumber == "" || j.Identity.AccountNumber == "-1" {
+		return doError(w, 400, "x-rh-identity header has an invalid or missing account number")
+	}
+
+	if j.Identity.Internal.OrgID == "" {
+		return doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
+	}
+
+	if j.Identity.Type == "" {
+		return doError(w, 400, "x-rh-identity header is missing type")
+	}
+
+	return nil
+}
+
 
 // EnforceIdentity extracts the X-Rh-Identity header and places the contents into the
 // request context.  If the Identity is invalid, the request will be aborted.
@@ -99,18 +123,8 @@ func EnforceIdentity(next http.Handler) http.Handler {
 			return
 		}
 
-		if jsonData.Identity.AccountNumber == "" || jsonData.Identity.AccountNumber == "-1" {
-			doError(w, 400, "x-rh-identity header has an invalid or missing account number")
-			return
-		}
-
-		if jsonData.Identity.Internal.OrgID == "" {
-			doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
-			return
-		}
-
-		if jsonData.Identity.Type == "" {
-			doError(w, 400, "x-rh-identity header is missing type")
+		err = jsonData.checkHeader(w)
+		if err != nil {
 			return
 		}
 
