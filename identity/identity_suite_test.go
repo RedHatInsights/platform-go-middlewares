@@ -116,6 +116,20 @@ var _ = Describe("Identity", func() {
 		})
 	})
 
+	Context("With a valid x-rh-id header", func() {
+		It("should 200 and set the type to associate", func() {
+			req.Header.Set("x-rh-identity", getBase64(`{ "identity": {"type": "Associate"} }`))
+
+			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
+				fn := func(rw http.ResponseWriter, nreq *http.Request) {
+					id := identity.Get(nreq.Context())
+					Expect(id.Identity.Type).To(Equal("Associate"))
+				}
+				return http.HandlerFunc(fn)
+			}())
+		})
+	})
+
 	Context("With a -1 account_number in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			for _, jsonIdentity := range validJson {
