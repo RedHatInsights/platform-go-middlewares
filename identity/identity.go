@@ -10,7 +10,7 @@ import (
 
 type identityKey int
 
- // Internal is the "internal" field of an XRHID
+// Internal is the "internal" field of an XRHID
 type Internal struct {
 	OrgID string `json:"org_id"`
 }
@@ -25,6 +25,7 @@ type User struct {
 	OrgAdmin  bool   `json:"is_org_admin"`
 	Internal  bool   `json:"is_internal"`
 	Locale    string `json:"locale"`
+	UserID    string `json:"user_id"`
 }
 
 // Associate is the "associate" field of an XRHID
@@ -95,7 +96,6 @@ func checkHeader(id *XRHID, w http.ResponseWriter) error {
 
 	return nil
 }
-
 
 // EnforceIdentity extracts the X-Rh-Identity header and places the contents into the
 // request context.  If the Identity is invalid, the request will be aborted.
