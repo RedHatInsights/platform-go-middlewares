@@ -85,8 +85,7 @@ func GetIdentityHeader(ctx context.Context) string {
 		if err != nil {
 			return ""
 		}
-		base64.StdEncoding.Encode(identityHeaders, identityHeaders)
-		return string(identityHeaders)
+		return base64.StdEncoding.EncodeToString(identityHeaders)
 	}
 	return ""
 }
