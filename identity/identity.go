@@ -76,6 +76,20 @@ func Get(ctx context.Context) XRHID {
 	return ctx.Value(Key).(XRHID)
 }
 
+// GetIdentityHeader returns the identity header from the given context if one is present.
+// Can be used to retrieve the header and pass it forward to other applications.
+// Returns the empty string if identity headers cannot be found.
+func GetIdentityHeader(ctx context.Context) string {
+	if xrhid, ok := ctx.Value(Key).(XRHID); ok {
+		identityHeaders, err := json.Marshal(xrhid)
+		if err != nil {
+			return ""
+		}
+		return base64.StdEncoding.EncodeToString(identityHeaders)
+	}
+	return ""
+}
+
 func checkHeader(id *XRHID, w http.ResponseWriter) error {
 
 	if id.Identity.Type == "Associate" && id.Identity.AccountNumber == "" {

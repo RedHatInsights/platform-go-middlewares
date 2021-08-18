@@ -83,11 +83,32 @@ var _ = Describe("Identity", func() {
 				}())
 			}
 		})
-	})
+		It("should be able to return the header again if headers are requested", func() {
+			for _, jsonIdentity := range validJson {
+				req.Header.Set("x-rh-identity", getBase64(jsonIdentity))
 
+				boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
+					fn := func(rw http.ResponseWriter, nreq *http.Request) {
+						h := identity.GetIdentityHeader(nreq.Context())
+						Expect(h).ToNot(BeEmpty())
+					}
+					return http.HandlerFunc(fn)
+				}())
+			}
+		})
+	})
 	Context("With a missing x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			boiler(req, 400, "Bad Request: missing x-rh-identity header\n")
+		})
+		It("should return empty string if headers are requested", func() {
+			boilerWithCustomHandler(req, 400, "Bad Request: missing x-rh-identity header\n", func() http.HandlerFunc {
+				fn := func(rw http.ResponseWriter, nreq *http.Request) {
+					h := identity.GetIdentityHeader(nreq.Context())
+					Expect(h).To(BeEmpty())
+				}
+				return http.HandlerFunc(fn)
+			}())
 		})
 	})
 
@@ -105,6 +126,18 @@ var _ = Describe("Identity", func() {
 			for _, jsonIdentity := range validJson {
 				req.Header.Set("x-rh-identity", getBase64(jsonIdentity+"}"))
 				boiler(req, 400, "Bad Request: x-rh-identity header is does not contain valid JSON\n")
+			}
+		})
+		It("should return empty string if headers are requested", func() {
+			for _, jsonIdentity := range validJson {
+				req.Header.Set("x-rh-identity", getBase64(jsonIdentity+"}"))
+				boilerWithCustomHandler(req, 400, "Bad Request: x-rh-identity header is does not contain valid JSON\n", func() http.HandlerFunc {
+					fn := func(rw http.ResponseWriter, nreq *http.Request) {
+						h := identity.GetIdentityHeader(nreq.Context())
+						Expect(h).To(BeEmpty())
+					}
+					return http.HandlerFunc(fn)
+				}())
 			}
 		})
 	})
