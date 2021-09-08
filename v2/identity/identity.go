@@ -9,6 +9,7 @@ import (
 )
 
 type identityKey int
+type rawIdentity string
 
 // Internal is the "internal" field of an XRHID
 type Internal struct {
@@ -61,6 +62,7 @@ type XRHID struct {
 
 // Key the key for the XRHID in that gets added to the context
 const Key identityKey = iota
+const IDHeaderKey identityKey = iota
 
 func getErrorText(code int, reason string) string {
 	return http.StatusText(code) + ": " + reason
@@ -79,18 +81,13 @@ func Get(ctx context.Context) (XRHID, bool) {
 	return xrhid, ok
 }
 
-// GetIdentityHeader returns the identity header from the given context if one is present.
-// Can be used to retrieve the header and pass it forward to other applications.
-// Returns the empty string if identity headers cannot be found.
-func GetIdentityHeader(ctx context.Context) string {
-	if xrhid, ok := ctx.Value(Key).(XRHID); ok {
-		identityHeaders, err := json.Marshal(xrhid)
-		if err != nil {
-			return ""
-		}
-		return base64.StdEncoding.EncodeToString(identityHeaders)
-	}
-	return ""
+// GetIdentityHeader returns the identity header from the given context if one
+// is present as well as an ok value.  Can be used to retrieve the header and
+// pass it forward to other applications.  Returns an empty string and false if
+// the context does not contain an identity header.
+func GetIdentityHeader(ctx context.Context) (string, bool) {
+	idHeader, ok := ctx.Value(IDHeaderKey).(string)
+	return idHeader, ok
 }
 
 func checkHeader(id *XRHID, w http.ResponseWriter) error {
@@ -146,6 +143,7 @@ func EnforceIdentity(next http.Handler) http.Handler {
 		}
 
 		ctx := context.WithValue(r.Context(), Key, jsonData)
+		ctx = context.WithValue(ctx, IDHeaderKey, rawHeaders[0])
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
