@@ -71,9 +71,12 @@ func doError(w http.ResponseWriter, code int, reason string) error {
 	return errors.New(reason)
 }
 
-// Get returns the identity struct from the context
-func Get(ctx context.Context) XRHID {
-	return ctx.Value(Key).(XRHID)
+// Get returns either an XRHID from the context or an empty XRHID as well as an
+// ok value.  If the context does not contain an XRHID, the ok value will be
+// false.
+func Get(ctx context.Context) (XRHID, bool) {
+	xrhid, ok := ctx.Value(Key).(XRHID)
+	return xrhid, ok
 }
 
 // GetIdentityHeader returns the identity header from the given context if one is present.
