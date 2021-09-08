@@ -9,7 +9,6 @@ import (
 )
 
 type identityKey int
-type rawIdentity string
 
 // Internal is the "internal" field of an XRHID
 type Internal struct {
@@ -61,8 +60,10 @@ type XRHID struct {
 }
 
 // Key the key for the XRHID in that gets added to the context
-const Key identityKey = iota
-const IDHeaderKey identityKey = iota
+const (
+	Key         identityKey = iota
+	IDHeaderKey identityKey = iota
+)
 
 func getErrorText(code int, reason string) string {
 	return http.StatusText(code) + ": " + reason

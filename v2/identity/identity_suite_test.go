@@ -75,7 +75,8 @@ var _ = Describe("Identity", func() {
 
 				boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 					fn := func(rw http.ResponseWriter, nreq *http.Request) {
-						id, _ := identity.Get(nreq.Context())
+						id, ok := identity.Get(nreq.Context())
+						Expect(ok).To(BeTrue())
 						Expect(id.Identity.Internal.OrgID).To(Equal("1979710"))
 						Expect(id.Identity.AccountNumber).To(Equal("540155"))
 					}
@@ -89,7 +90,7 @@ var _ = Describe("Identity", func() {
 
 				boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 					fn := func(rw http.ResponseWriter, nreq *http.Request) {
-						h := identity.GetIdentityHeader(nreq.Context())
+						h, _ := identity.GetIdentityHeader(nreq.Context())
 						Expect(h).ToNot(BeEmpty())
 					}
 					return http.HandlerFunc(fn)
@@ -104,7 +105,8 @@ var _ = Describe("Identity", func() {
 		It("should return empty string if headers are requested", func() {
 			boilerWithCustomHandler(req, 400, "Bad Request: missing x-rh-identity header\n", func() http.HandlerFunc {
 				fn := func(rw http.ResponseWriter, nreq *http.Request) {
-					h := identity.GetIdentityHeader(nreq.Context())
+					h, ok := identity.GetIdentityHeader(nreq.Context())
+					Expect(ok).To(BeFalse())
 					Expect(h).To(BeEmpty())
 				}
 				return http.HandlerFunc(fn)
@@ -133,7 +135,8 @@ var _ = Describe("Identity", func() {
 				req.Header.Set("x-rh-identity", getBase64(jsonIdentity+"}"))
 				boilerWithCustomHandler(req, 400, "Bad Request: x-rh-identity header is does not contain valid JSON\n", func() http.HandlerFunc {
 					fn := func(rw http.ResponseWriter, nreq *http.Request) {
-						h := identity.GetIdentityHeader(nreq.Context())
+						h, ok := identity.GetIdentityHeader(nreq.Context())
+						Expect(ok).To(BeFalse())
 						Expect(h).To(BeEmpty())
 					}
 					return http.HandlerFunc(fn)
