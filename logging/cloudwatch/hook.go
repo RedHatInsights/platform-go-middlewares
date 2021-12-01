@@ -62,12 +62,16 @@ func (h *Hook) getOrCreateCloudWatchLogGroup() (*cloudwatchlogs.DescribeLogStrea
 }
 
 func NewBatchingHook(groupName, streamName string, cfg *aws.Config, batchFrequency time.Duration) (*Hook, error) {
+	sess, err := session.NewSession(cfg)
+	if err != nil {
+		return nil, err
+	}
 	h := &Hook{
-		svc:        cloudwatchlogs.New(session.New(cfg)),
+		svc:        cloudwatchlogs.New(sess),
 		groupName:  groupName,
 		streamName: streamName,
 		// unbuferred channel for flushing, calling flush method will block
-		flush: make(chan bool, 0),
+		flush: make(chan bool),
 	}
 
 	resp, err := h.getOrCreateCloudWatchLogGroup()
@@ -77,7 +81,9 @@ func NewBatchingHook(groupName, streamName string, cfg *aws.Config, batchFrequen
 
 	if batchFrequency > 0 {
 		h.ch = make(chan *cloudwatchlogs.InputLogEvent, 10000)
-		go h.putBatches(h.flush, time.Tick(batchFrequency))
+		ticker := time.NewTicker(batchFrequency)
+
+		go h.putBatches(h.flush, ticker.C)
 	}
 
 	// grab the next sequence token
@@ -105,6 +111,11 @@ func (h *Hook) Flush() error {
 		return *h.err
 	}
 	return nil
+}
+
+// Function alias for compatibility with zap logging
+func (h *Hook) Sync() error {
+	return h.Flush()
 }
 
 func (h *Hook) Fire(entry *logrus.Entry) error {
@@ -186,7 +197,7 @@ func (h *Hook) sendBatch(batch []*cloudwatchlogs.InputLogEvent) {
 		h.sendBatch(batch)
 		return
 	}
-	
+
 	h.m.Unlock()
 }
 
