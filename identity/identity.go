@@ -133,7 +133,7 @@ func EnforceIdentity(next http.Handler) http.Handler {
 		var jsonData XRHID
 		err = json.Unmarshal(idRaw, &jsonData)
 		if err != nil {
-			doError(w, 400, "x-rh-identity header is does not contain valid JSON")
+			doError(w, 400, "x-rh-identity header does not contain valid JSON")
 			return
 		}
 
