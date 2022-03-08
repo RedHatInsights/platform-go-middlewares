@@ -138,6 +138,8 @@ func EnforceIdentity(next http.Handler) http.Handler {
 			return
 		}
 
+		topLevelOrgIDFallback(&jsonData)
+
 		err = checkHeader(&jsonData, w)
 		if err != nil {
 			return
@@ -146,4 +148,12 @@ func EnforceIdentity(next http.Handler) http.Handler {
 		ctx := context.WithValue(r.Context(), Key, jsonData)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
+}
+
+// if org_id is not defined at the top level, use the internal one
+// https://issues.redhat.com/browse/RHCLOUD-17717
+func topLevelOrgIDFallback(identity *XRHID) {
+	if identity.Identity.OrgID == "" && identity.Identity.Internal.OrgID != "" {
+		identity.Identity.OrgID = identity.Identity.Internal.OrgID
+	}
 }
