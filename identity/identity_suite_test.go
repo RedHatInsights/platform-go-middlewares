@@ -16,6 +16,7 @@ import (
 var validJson = [...]string{
 	`{ "identity": {"account_number": "540155", "org_id": "1979710", "type": "User", "internal": {"org_id": "1979710"} } }`,
 	`{ "identity": {"account_number": "540155", "org_id": "1979710", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
+	`{ "identity": {"account_number": "540155", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
 }
 
 func GetTestHandler(allowPass bool) http.HandlerFunc {
@@ -175,8 +176,13 @@ var _ = Describe("Identity", func() {
 
 	Context("With missing org_id in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
-			for _, jsonIdentity := range validJson {
-				req.Header.Set("x-rh-identity", getBase64(strings.Replace(jsonIdentity, `"org_id": "1979710",`, "", 1)))
+			var missingOrgIDJson = [...]string{
+				`{ "identity": {"account_number": "540155", "type": "User", "internal": {} } }`,
+				`{ "identity": {"account_number": "540155", "org_id": "1979710", "type": "User", "internal": {} } }`,
+			}
+
+			for _, jsonIdentity := range missingOrgIDJson {
+				req.Header.Set("x-rh-identity", getBase64(jsonIdentity))
 				boiler(req, 400, "Bad Request: x-rh-identity header has an invalid or missing org_id\n")
 			}
 		})
