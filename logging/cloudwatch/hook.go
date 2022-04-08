@@ -22,6 +22,7 @@ type Hook struct {
 	m                 sync.Mutex
 	ch                chan *cloudwatchlogs.InputLogEvent
 	flush             chan bool
+	flushWG           sync.WaitGroup
 	err               *error
 }
 
@@ -106,7 +107,9 @@ func NewBatchingHook(groupName, streamName string, cfg *aws.Config, batchFrequen
 
 // Force flushing of currently stored messages
 func (h *Hook) Flush() error {
+	h.flushWG.Add(1)
 	h.flush <- true
+	h.flushWG.Wait()
 	if h.err != nil {
 		return *h.err
 	}
@@ -160,6 +163,7 @@ func (h *Hook) putBatches(flush <-chan bool, ticker <-chan time.Time) {
 			size += messageSize
 		case <-flush:
 			go h.sendBatch(batch)
+			h.flushWG.Done()
 			batch = nil
 			size = 0
 		case <-ticker:
