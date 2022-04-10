@@ -21,7 +21,6 @@ type Hook struct {
 	nextSequenceToken *string
 	m                 sync.Mutex
 	ch                chan *cloudwatchlogs.InputLogEvent
-	flush             chan bool
 	flushWG           sync.WaitGroup
 	err               *error
 }
@@ -71,8 +70,6 @@ func NewBatchingHook(groupName, streamName string, cfg *aws.Config, batchFrequen
 		svc:        cloudwatchlogs.New(sess),
 		groupName:  groupName,
 		streamName: streamName,
-		// unbuferred channel for flushing, calling flush method will block
-		flush: make(chan bool),
 	}
 
 	resp, err := h.getOrCreateCloudWatchLogGroup()
@@ -84,7 +81,7 @@ func NewBatchingHook(groupName, streamName string, cfg *aws.Config, batchFrequen
 		h.ch = make(chan *cloudwatchlogs.InputLogEvent, 10000)
 		ticker := time.NewTicker(batchFrequency)
 
-		go h.putBatches(h.flush, ticker.C)
+		go h.putBatches(ticker.C)
 	}
 
 	// grab the next sequence token
@@ -108,7 +105,7 @@ func NewBatchingHook(groupName, streamName string, cfg *aws.Config, batchFrequen
 // Force flushing of currently stored messages
 func (h *Hook) Flush() error {
 	h.flushWG.Add(1)
-	h.flush <- true
+	h.ch <- nil
 	h.flushWG.Wait()
 	if h.err != nil {
 		return *h.err
@@ -147,25 +144,28 @@ func (h *Hook) Fire(entry *logrus.Entry) error {
 	}
 }
 
-func (h *Hook) putBatches(flush <-chan bool, ticker <-chan time.Time) {
+func (h *Hook) putBatches(ticker <-chan time.Time) {
 	var batch []*cloudwatchlogs.InputLogEvent
 	size := 0
 	for {
 		select {
 		case p := <-h.ch:
-			messageSize := len(*p.Message) + 26
-			if size+messageSize >= 1048576 || len(batch) == 10000 {
+			if p != nil {
+				messageSize := len(*p.Message) + 26
+				if size+messageSize >= 1048576 || len(batch) == 10000 {
+					h.sendBatch(batch)
+					batch = nil
+					size = 0
+				}
+				batch = append(batch, p)
+				size += messageSize
+			} else {
+				// Flush event (nil)
 				h.sendBatch(batch)
+				h.flushWG.Done()
 				batch = nil
 				size = 0
 			}
-			batch = append(batch, p)
-			size += messageSize
-		case <-flush:
-			h.sendBatch(batch)
-			h.flushWG.Done()
-			batch = nil
-			size = 0
 		case <-ticker:
 			h.sendBatch(batch)
 			batch = nil
