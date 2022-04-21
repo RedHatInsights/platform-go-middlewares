@@ -14,9 +14,9 @@ import (
 )
 
 var validJson = [...]string{
-	`{ "identity": {"account_number": "540155", "org_id": "1979710", "type": "User", "internal": {"org_id": "1979710"} } }`,
-	`{ "identity": {"account_number": "540155", "org_id": "1979710", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
-	`{ "identity": {"account_number": "540155", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
+	`{ "identity": {"account_number": "540155", "auth_type": "jwt-auth", "org_id": "1979710", "type": "User", "internal": {"org_id": "1979710"} } }`,
+	`{ "identity": {"account_number": "540155", "auth_type": "cert-auth", "org_id": "1979710", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
+	`{ "identity": {"account_number": "540155", "auth_type": "basic-auth", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
 }
 
 func GetTestHandler(allowPass bool) http.HandlerFunc {
@@ -127,13 +127,13 @@ var _ = Describe("Identity", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			for _, jsonIdentity := range validJson {
 				req.Header.Set("x-rh-identity", getBase64(jsonIdentity+"}"))
-				boiler(req, 400, "Bad Request: x-rh-identity header is does not contain valid JSON\n")
+				boiler(req, 400, "Bad Request: x-rh-identity header does not contain valid JSON\n")
 			}
 		})
 		It("should return empty string if headers are requested", func() {
 			for _, jsonIdentity := range validJson {
 				req.Header.Set("x-rh-identity", getBase64(jsonIdentity+"}"))
-				boilerWithCustomHandler(req, 400, "Bad Request: x-rh-identity header is does not contain valid JSON\n", func() http.HandlerFunc {
+				boilerWithCustomHandler(req, 400, "Bad Request: x-rh-identity header does not contain valid JSON\n", func() http.HandlerFunc {
 					fn := func(rw http.ResponseWriter, nreq *http.Request) {
 						h := identity.GetIdentityHeader(nreq.Context())
 						Expect(h).To(BeEmpty())
