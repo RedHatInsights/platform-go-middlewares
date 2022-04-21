@@ -12,7 +12,9 @@ type identityKey int
 
 // Internal is the "internal" field of an XRHID
 type Internal struct {
-	OrgID string `json:"org_id"`
+	OrgID       string `json:"org_id"`
+	AuthTime    string `json:"auth_time,omitempty"`
+	CrossAccess bool   `json:"cross_access,omitempty"`
 }
 
 // User is the "user" field of an XRHID
@@ -43,16 +45,25 @@ type X509 struct {
 	IssuerDN  string `json:"issuer_dn"`
 }
 
+// System is the "system" field of an XRHID
+type System struct {
+	CommonName string `json:"cn,omitempty"`
+	CertType   string `json:"cert_type,omitempty"`
+	ClusterId  string `json:"cluster_id,omitempty"`
+}
+
 // Identity is the main body of the XRHID
 type Identity struct {
-	AccountNumber string                 `json:"account_number"`
-	OrgID         string                 `json:"org_id"`
-	Internal      Internal               `json:"internal"`
-	User          User                   `json:"user,omitempty"`
-	System        map[string]interface{} `json:"system,omitempty"`
-	Associate     Associate              `json:"associate,omitempty"`
-	X509          X509                   `json:"x509,omitempty"`
-	Type          string                 `json:"type"`
+	AccountNumber         string    `json:"account_number"`
+	EmployeeAccountNumber string    `json:"employee_account_number,omitempty"`
+	OrgID                 string    `json:"org_id"`
+	Internal              Internal  `json:"internal"`
+	User                  User      `json:"user,omitempty"`
+	System                System    `json:"system,omitempty"`
+	Associate             Associate `json:"associate,omitempty"`
+	X509                  X509      `json:"x509,omitempty"`
+	Type                  string    `json:"type"`
+	AuthType              string    `json:"auth_type"`
 }
 
 // XRHID is the "identity" pricipal object set by Cloud Platform 3scale
