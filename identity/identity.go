@@ -13,7 +13,7 @@ type identityKey int
 // Internal is the "internal" field of an XRHID
 type Internal struct {
 	OrgID       string `json:"org_id"`
-	AuthTime    string `json:"auth_time,omitempty"`
+	AuthTime    int    `json:"auth_time,omitempty"`
 	CrossAccess bool   `json:"cross_access,omitempty"`
 }
 
