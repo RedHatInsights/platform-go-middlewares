@@ -13,10 +13,49 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+// example header based on x-rh-identity seen in stage env
+var exampleHeader = `
+{
+  "entitlements": {
+    "insights": {
+      "is_entitled": true,
+      "is_trial": false
+    },
+    "cost_management": {
+      "is_entitled": true,
+      "is_trial": false
+    }
+  },
+  "identity": {
+    "internal": {
+      "cross_access": false,
+      "auth_time": 0,
+      "org_id": "1979710"
+    },
+    "user": {
+      "is_active": true,
+      "locale": "en_US",
+      "is_org_admin": true,
+      "username": "Test",
+      "email": "test@test.com",
+      "first_name": "Test",
+      "user_id": "55555555",
+      "last_name": "User",
+      "is_internal": true
+    },
+    "auth_type": "jwt-auth",
+    "org_id": "1979710",
+    "account_number": "540155",
+    "type": "User"
+  }
+}
+`
+
 var validJson = [...]string{
 	`{ "identity": {"account_number": "540155", "auth_type": "jwt-auth", "org_id": "1979710", "type": "User", "internal": {"org_id": "1979710"} } }`,
 	`{ "identity": {"account_number": "540155", "auth_type": "cert-auth", "org_id": "1979710", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
 	`{ "identity": {"account_number": "540155", "auth_type": "basic-auth", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
+	exampleHeader,
 }
 
 func GetTestHandler(allowPass bool) http.HandlerFunc {
