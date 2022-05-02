@@ -184,9 +184,18 @@ var _ = Describe("Identity", func() {
 	})
 
 	Context("With missing account_number in the x-rh-id header", func() {
-		It("should throw a 400 with a descriptive message", func() {
-			req.Header.Set("x-rh-identity", getBase64(`{ "type": "User", "org_id": "1979710" }`))
-			boiler(req, 400, "Bad Request: x-rh-identity header has an invalid or missing account number\n")
+		It("should 200", func() {
+			req.Header.Set("x-rh-identity", getBase64(`{ "identity": {"org_id": "1979710", "auth_type": "basic-auth", "type": "Associate", "internal": {"org_id": "1979710"} } }`))
+
+			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
+				fn := func(rw http.ResponseWriter, nreq *http.Request) {
+					id := identity.Get(nreq.Context())
+					Expect(id.Identity.OrgID).To(Equal("1979710"))
+					Expect(id.Identity.Internal.OrgID).To(Equal("1979710"))
+					Expect(id.Identity.AccountNumber).To(Equal(""))
+				}
+				return http.HandlerFunc(fn)
+			}())
 		})
 	})
 
@@ -208,7 +217,7 @@ var _ = Describe("Identity", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			for _, jsonIdentity := range validJson {
 				req.Header.Set("x-rh-identity", getBase64(strings.Replace(jsonIdentity, "540155", "-1", 1)))
-				boiler(req, 400, "Bad Request: x-rh-identity header has an invalid or missing account number\n")
+				boiler(req, 400, "Bad Request: x-rh-identity header has an invalid account number\n")
 			}
 		})
 	})

@@ -54,7 +54,7 @@ type System struct {
 
 // Identity is the main body of the XRHID
 type Identity struct {
-	AccountNumber         string    `json:"account_number"`
+	AccountNumber         string    `json:"account_number,omitempty"`
 	EmployeeAccountNumber string    `json:"employee_account_number,omitempty"`
 	OrgID                 string    `json:"org_id"`
 	Internal              Internal  `json:"internal"`
@@ -108,8 +108,8 @@ func checkHeader(id *XRHID, w http.ResponseWriter) error {
 		return nil
 	}
 
-	if id.Identity.AccountNumber == "" || id.Identity.AccountNumber == "-1" {
-		return doError(w, 400, "x-rh-identity header has an invalid or missing account number")
+	if id.Identity.AccountNumber == "-1" {
+		return doError(w, 400, "x-rh-identity header has an invalid account number")
 	}
 
 	if id.Identity.OrgID == "" || id.Identity.Internal.OrgID == "" {
