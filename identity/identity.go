@@ -5,8 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 )
+
+
 
 type identityKey int
 
@@ -145,6 +148,7 @@ func EnforceIdentity(next http.Handler) http.Handler {
 		var jsonData XRHID
 		err = json.Unmarshal(idRaw, &jsonData)
 		if err != nil {
+			log.Printf("unable to unmarshal x-rh-identity header: %v", idRaw)
 			doError(w, 400, "x-rh-identity header does not contain valid JSON")
 			return
 		}
