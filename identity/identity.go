@@ -63,7 +63,7 @@ type Identity struct {
 	Associate             Associate `json:"associate,omitempty"`
 	X509                  X509      `json:"x509,omitempty"`
 	Type                  string    `json:"type"`
-	AuthType              string    `json:"auth_type"`
+	AuthType              string    `json:"auth_type,omitempty"`
 }
 
 // XRHID is the "identity" pricipal object set by Cloud Platform 3scale
