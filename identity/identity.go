@@ -9,15 +9,13 @@ import (
 	"net/http"
 )
 
-
-
 type identityKey int
 
 // Internal is the "internal" field of an XRHID
 type Internal struct {
-	OrgID       string `json:"org_id"`
-	AuthTime    int    `json:"auth_time,omitempty"`
-	CrossAccess bool   `json:"cross_access,omitempty"`
+	OrgID       string  `json:"org_id"`
+	AuthTime    float32 `json:"auth_time,omitempty"`
+	CrossAccess bool    `json:"cross_access,omitempty"`
 }
 
 // User is the "user" field of an XRHID
@@ -148,7 +146,7 @@ func EnforceIdentity(next http.Handler) http.Handler {
 		var jsonData XRHID
 		err = json.Unmarshal(idRaw, &jsonData)
 		if err != nil {
-			log.Printf("unable to unmarshal x-rh-identity header: %v", idRaw)
+			log.Printf("unable to unmarshal x-rh-identity header: %s", err)
 			doError(w, 400, "x-rh-identity header does not contain valid JSON")
 			return
 		}
