@@ -97,7 +97,7 @@ type Identity struct {
 	Associate             Associate `json:"associate,omitempty"`
 	X509                  X509      `json:"x509,omitempty"`
 	Type                  string    `json:"type"`
-	AuthType              string    `json:"auth_type"`
+	AuthType              string    `json:"auth_type,omitempty"`
 }
 
 // ServiceDetails describe the services the org is entitled to
