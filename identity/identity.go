@@ -109,10 +109,6 @@ func checkHeader(id *XRHID, w http.ResponseWriter) error {
 		return nil
 	}
 
-	if id.Identity.AccountNumber == "-1" {
-		return doError(w, 400, "x-rh-identity header has an invalid account number")
-	}
-
 	if id.Identity.OrgID == "" || id.Identity.Internal.OrgID == "" {
 		return doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
 	}
