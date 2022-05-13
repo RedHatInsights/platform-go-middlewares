@@ -211,6 +211,18 @@ var _ = Describe("Identity", func() {
 				return http.HandlerFunc(fn)
 			}())
 		})
+
+		It("should 200 and set the type to X509", func() {
+			req.Header.Set("x-rh-identity", getBase64(`{"identity": {"type": "X509"}}`))
+
+			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
+				fn := func(rw http.ResponseWriter, nreq *http.Request) {
+					id := identity.Get(nreq.Context())
+					Expect(id.Identity.Type).To(Equal("X509"))
+				}
+				return http.HandlerFunc(fn)
+			}())
+		})
 	})
 
 	Context("With a -1 account_number in the x-rh-id header", func() {
