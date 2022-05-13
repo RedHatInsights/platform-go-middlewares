@@ -105,7 +105,7 @@ func GetIdentityHeader(ctx context.Context) string {
 
 func checkHeader(id *XRHID, w http.ResponseWriter) error {
 
-	if id.Identity.Type == "Associate" && id.Identity.AccountNumber == "" {
+	if (id.Identity.Type == "Associate" || id.Identity.Type == "X509") && id.Identity.AccountNumber == "" {
 		return nil
 	}
 
