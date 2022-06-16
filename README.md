@@ -44,3 +44,6 @@ Branch name: **master**
 * `Key` type is no longer exported, use appropriate functions.
 * Separated parsing and validation into two exported functions.
 * New middleware function `EnforceIdentityWithLogger` with custom logging interface.
+* Separated CloudWatch batch-writing client from the logrus hook data structure.
+  This allows other logging frameworks to use the BatchWriter client, and logrus
+  clients can use both the BatchWriter and the Hook.
