@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/redhatinsights/platform-go-middlewares/identity"
@@ -222,15 +221,6 @@ var _ = Describe("Identity", func() {
 				}
 				return http.HandlerFunc(fn)
 			}())
-		})
-	})
-
-	Context("With a -1 account_number in the x-rh-id header", func() {
-		It("should throw a 400 with a descriptive message", func() {
-			for _, jsonIdentity := range validJson {
-				req.Header.Set("x-rh-identity", getBase64(strings.Replace(jsonIdentity, "540155", "-1", 1)))
-				boiler(req, 400, "Bad Request: x-rh-identity header has an invalid account number\n")
-			}
 		})
 	})
 
