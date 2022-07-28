@@ -109,7 +109,7 @@ func checkHeader(id *XRHID, w http.ResponseWriter) error {
 		return nil
 	}
 
-	if id.Identity.OrgID == "" || id.Identity.Internal.OrgID == "" {
+	if id.Identity.OrgID == "" && id.Identity.Internal.OrgID == "" {
 		return doError(w, 400, "x-rh-identity header has an invalid or missing org_id")
 	}
 
