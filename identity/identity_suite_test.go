@@ -228,7 +228,6 @@ var _ = Describe("Identity", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			var missingOrgIDJson = [...]string{
 				`{ "identity": {"account_number": "540155", "type": "User", "internal": {} } }`,
-				`{ "identity": {"account_number": "540155", "org_id": "1979710", "type": "User", "internal": {} } }`,
 			}
 
 			for _, jsonIdentity := range missingOrgIDJson {
