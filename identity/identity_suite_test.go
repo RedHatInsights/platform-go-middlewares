@@ -54,6 +54,7 @@ var validJson = [...]string{
 	`{ "identity": {"account_number": "540155", "auth_type": "jwt-auth", "org_id": "1979710", "type": "User", "internal": {"org_id": "1979710"} } }`,
 	`{ "identity": {"account_number": "540155", "auth_type": "cert-auth", "org_id": "1979710", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
 	`{ "identity": {"account_number": "540155", "auth_type": "basic-auth", "type": "Associate", "internal": {"org_id": "1979710"} } }`,
+	`{ "identity": {"account_number": "540155", "auth_type": "cert-auth", "org_id": "1979710", "type": "Associate", "internal": {} } }`,
 	exampleHeader,
 }
 
@@ -116,7 +117,6 @@ var _ = Describe("Identity", func() {
 					fn := func(rw http.ResponseWriter, nreq *http.Request) {
 						id := identity.Get(nreq.Context())
 						Expect(id.Identity.OrgID).To(Equal("1979710"))
-						Expect(id.Identity.Internal.OrgID).To(Equal("1979710"))
 						Expect(id.Identity.AccountNumber).To(Equal("540155"))
 					}
 					return http.HandlerFunc(fn)
