@@ -1,12 +1,13 @@
 package identity_test
 
 import (
+	"context"
 	"encoding/base64"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
-	"github.com/redhatinsights/platform-go-middlewares/identity"
+	"github.com/redhatinsights/platform-go-middlewares/v2/identity"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -88,6 +89,19 @@ func boiler(req *http.Request, expectedStatusCode int, expectedBody string) {
 	Expect(rr.Body.String()).To(Equal(expectedBody))
 }
 
+func noopLogger(ctx context.Context, rawId, msg string) {
+}
+
+func boilerWithLogger(req *http.Request, expectedStatusCode int, expectedBody string) {
+	rr := httptest.NewRecorder()
+
+	handler := identity.EnforceIdentityWithLogger(noopLogger)
+	handler(GetTestHandler(expectedStatusCode == 200)).ServeHTTP(rr, req)
+
+	Expect(rr.Code).To(Equal(expectedStatusCode))
+	Expect(rr.Body.String()).To(Equal(expectedBody))
+}
+
 func getBase64(data string) string {
 	return base64.StdEncoding.EncodeToString([]byte(data))
 }
@@ -108,14 +122,16 @@ var _ = Describe("Identity", func() {
 		req = r
 	})
 
-	Context("With a valid x-rh-id header", func() {
-		It("should 200 and set the org_id on the context", func() {
+	Context("WithIdentity a valid x-rh-id header", func() {
+		It("should 200 and set raw identity on the context", func() {
 			for _, jsonIdentity := range validJson {
 				req.Header.Set("x-rh-identity", getBase64(jsonIdentity))
 
 				boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 					fn := func(rw http.ResponseWriter, nreq *http.Request) {
-						id := identity.Get(nreq.Context())
+						raw := identity.GetRawIdentity(nreq.Context())
+						id, err1 := identity.DecodeAndCheckIdentity(raw)
+						Expect(err1).To(BeNil())
 						Expect(id.Identity.OrgID).To(Equal("1979710"))
 						Expect(id.Identity.AccountNumber).To(Equal("540155"))
 					}
@@ -123,13 +139,42 @@ var _ = Describe("Identity", func() {
 				}())
 			}
 		})
+
+		It("should 200 and set the org_id on the context", func() {
+			for _, jsonIdentity := range validJson {
+				req.Header.Set("x-rh-identity", getBase64(jsonIdentity))
+
+				boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
+					fn := func(rw http.ResponseWriter, nreq *http.Request) {
+						id := identity.GetIdentity(nreq.Context())
+						Expect(id.Identity.OrgID).To(Equal("1979710"))
+						Expect(id.Identity.AccountNumber).To(Equal("540155"))
+					}
+					return http.HandlerFunc(fn)
+				}())
+			}
+		})
+
+		It("should 200 and set the entitlements on the context", func() {
+			req.Header.Set("x-rh-identity", getBase64(exampleHeader))
+
+			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
+				fn := func(rw http.ResponseWriter, nreq *http.Request) {
+					id := identity.GetIdentity(nreq.Context())
+					Expect(id.Entitlements["insights"].IsEntitled).To(BeTrue())
+					Expect(id.Entitlements["cost_management"].IsEntitled).To(BeTrue())
+				}
+				return http.HandlerFunc(fn)
+			}())
+		})
+
 		It("should be able to return the header again if headers are requested", func() {
 			for _, jsonIdentity := range validJson {
 				req.Header.Set("x-rh-identity", getBase64(jsonIdentity))
 
 				boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 					fn := func(rw http.ResponseWriter, nreq *http.Request) {
-						h := identity.GetIdentityHeader(nreq.Context())
+						h := identity.EncodeIdentity(nreq.Context())
 						Expect(h).ToNot(BeEmpty())
 					}
 					return http.HandlerFunc(fn)
@@ -137,14 +182,22 @@ var _ = Describe("Identity", func() {
 			}
 		})
 	})
-	Context("With a missing x-rh-id header", func() {
+
+	Context("WithIdentity a valid x-rh-id header and logger", func() {
+		It("should throw a 400 with a descriptive message", func() {
+			boilerWithLogger(req, 400, "Bad Request: missing x-rh-identity header\n")
+		})
+	})
+
+	Context("WithIdentity a missing x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			boiler(req, 400, "Bad Request: missing x-rh-identity header\n")
 		})
+
 		It("should return empty string if headers are requested", func() {
 			boilerWithCustomHandler(req, 400, "Bad Request: missing x-rh-identity header\n", func() http.HandlerFunc {
 				fn := func(rw http.ResponseWriter, nreq *http.Request) {
-					h := identity.GetIdentityHeader(nreq.Context())
+					h := identity.EncodeIdentity(nreq.Context())
 					Expect(h).To(BeEmpty())
 				}
 				return http.HandlerFunc(fn)
@@ -152,7 +205,7 @@ var _ = Describe("Identity", func() {
 		})
 	})
 
-	Context("With invalid b64 data in the x-rh-id header", func() {
+	Context("WithIdentity invalid b64 data in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			for _, jsonIdentity := range validJson {
 				req.Header.Set("x-rh-identity", "="+getBase64(jsonIdentity))
@@ -161,19 +214,20 @@ var _ = Describe("Identity", func() {
 		})
 	})
 
-	Context("With invalid json data (valid b64) in the x-rh-id header", func() {
+	Context("WithIdentity invalid json data (valid b64) in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			for _, jsonIdentity := range validJson {
 				req.Header.Set("x-rh-identity", getBase64(jsonIdentity+"}"))
-				boiler(req, 400, "Bad Request: x-rh-identity header does not contain valid JSON\n")
+				boiler(req, 400, "Bad Request: x-rh-identity header does not contain valid JSON: invalid character '}' after top-level value\n")
 			}
 		})
+
 		It("should return empty string if headers are requested", func() {
 			for _, jsonIdentity := range validJson {
 				req.Header.Set("x-rh-identity", getBase64(jsonIdentity+"}"))
-				boilerWithCustomHandler(req, 400, "Bad Request: x-rh-identity header does not contain valid JSON\n", func() http.HandlerFunc {
+				boilerWithCustomHandler(req, 400, "Bad Request: x-rh-identity header does not contain valid JSON: invalid character '}' after top-level value\n", func() http.HandlerFunc {
 					fn := func(rw http.ResponseWriter, nreq *http.Request) {
-						h := identity.GetIdentityHeader(nreq.Context())
+						h := identity.EncodeIdentity(nreq.Context())
 						Expect(h).To(BeEmpty())
 					}
 					return http.HandlerFunc(fn)
@@ -182,13 +236,13 @@ var _ = Describe("Identity", func() {
 		})
 	})
 
-	Context("With missing account_number in the x-rh-id header", func() {
+	Context("WithIdentity missing account_number in the x-rh-id header", func() {
 		It("should 200", func() {
 			req.Header.Set("x-rh-identity", getBase64(`{ "identity": {"org_id": "1979710", "auth_type": "basic-auth", "type": "Associate", "internal": {"org_id": "1979710"} } }`))
 
 			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 				fn := func(rw http.ResponseWriter, nreq *http.Request) {
-					id := identity.Get(nreq.Context())
+					id := identity.GetIdentity(nreq.Context())
 					Expect(id.Identity.OrgID).To(Equal("1979710"))
 					Expect(id.Identity.Internal.OrgID).To(Equal("1979710"))
 					Expect(id.Identity.AccountNumber).To(Equal(""))
@@ -198,13 +252,13 @@ var _ = Describe("Identity", func() {
 		})
 	})
 
-	Context("With a valid x-rh-id header", func() {
+	Context("WithIdentity a valid x-rh-id header", func() {
 		It("should 200 and set the type to associate", func() {
 			req.Header.Set("x-rh-identity", getBase64(`{ "identity": {"type": "Associate"} }`))
 
 			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 				fn := func(rw http.ResponseWriter, nreq *http.Request) {
-					id := identity.Get(nreq.Context())
+					id := identity.GetIdentity(nreq.Context())
 					Expect(id.Identity.Type).To(Equal("Associate"))
 				}
 				return http.HandlerFunc(fn)
@@ -216,7 +270,7 @@ var _ = Describe("Identity", func() {
 
 			boilerWithCustomHandler(req, 200, "", func() http.HandlerFunc {
 				fn := func(rw http.ResponseWriter, nreq *http.Request) {
-					id := identity.Get(nreq.Context())
+					id := identity.GetIdentity(nreq.Context())
 					Expect(id.Identity.Type).To(Equal("X509"))
 				}
 				return http.HandlerFunc(fn)
@@ -224,7 +278,7 @@ var _ = Describe("Identity", func() {
 		})
 	})
 
-	Context("With missing org_id in the x-rh-id header", func() {
+	Context("WithIdentity missing org_id in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			var missingOrgIDJson = [...]string{
 				`{ "identity": {"account_number": "540155", "type": "User", "internal": {} } }`,
@@ -237,7 +291,7 @@ var _ = Describe("Identity", func() {
 		})
 	})
 
-	Context("With missing type in the x-rh-id header", func() {
+	Context("WithIdentity missing type in the x-rh-id header", func() {
 		It("should throw a 400 with a descriptive message", func() {
 			req.Header.Set("x-rh-identity", getBase64(`{"identity":{"account_number":"540155","type":"", "org_id":"1979710", "internal": {"org_id": "1979710"}}}`))
 			boiler(req, 400, "Bad Request: x-rh-identity header is missing type\n")
