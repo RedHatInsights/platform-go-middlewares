@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/middleware"
-	"github.com/redhatinsights/platform-go-middlewares/request_id"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/redhatinsights/platform-go-middlewares/v2/request_id"
 	"go.uber.org/zap"
 )
 

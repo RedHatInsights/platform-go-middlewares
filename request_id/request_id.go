@@ -17,8 +17,8 @@ import (
 // Key to use when setting the request ID.
 type ctxKeyRequestID int
 
-// RequestIDKey is the key that holds the unique request ID in a request context.
-const RequestIDKey ctxKeyRequestID = 0
+// requestIDKey is the key that holds the unique request ID in a request context.
+const requestIDKey ctxKeyRequestID = 0
 
 var prefix string
 var reqid uint64
@@ -75,7 +75,7 @@ func ConfiguredRequestID(header string) func(next http.Handler) http.Handler {
 				myid := atomic.AddUint64(&reqid, 1)
 				requestID = fmt.Sprintf("%s-%06d", prefix, myid)
 			}
-			ctx = context.WithValue(ctx, RequestIDKey, requestID)
+			ctx = context.WithValue(ctx, requestIDKey, requestID)
 			w.Header().Set(header, requestID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		}
@@ -90,7 +90,7 @@ func GetReqID(ctx context.Context) string {
 	if ctx == nil {
 		return ""
 	}
-	if reqID, ok := ctx.Value(RequestIDKey).(string); ok {
+	if reqID, ok := ctx.Value(requestIDKey).(string); ok {
 		return reqID
 	}
 	return ""
