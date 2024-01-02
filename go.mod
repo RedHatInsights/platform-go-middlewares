@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/aws/aws-sdk-go v1.49.13
-	github.com/go-chi/chi v4.0.2+incompatible
+	github.com/go-chi/chi v4.1.2+incompatible
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.10.1
 	github.com/pkg/errors v0.9.1 // indirect
