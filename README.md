@@ -43,7 +43,7 @@ Branch name: **master**
 * Deprecated `GetIdentityHeader`, replaced with `GetRawIdentity`. Before calling this function, `WithRawIdentity` must be set.
 * `Key` type is no longer exported, use appropriate functions.
 * Separated parsing and validation into two exported functions.
-* New middleware function `EnforceIdentityWithLogger` with custom logging interface.
+* The `EnforceIdentity` function is deprecated. Use the new middleware function `EnforceIdentityWithLogger` with custom logging interface.
 * Separated CloudWatch batch-writing client from the logrus hook data structure.
   This allows other logging frameworks to use the BatchWriter client, and logrus
   clients can use both the BatchWriter and the Hook.
