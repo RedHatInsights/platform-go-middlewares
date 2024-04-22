@@ -179,6 +179,12 @@ func GetIdentity(ctx context.Context) XRHID {
 	return value.(XRHID)
 }
 
+// GetOrgID returns the org_id from the identity struct in the context or empty string when not present.
+func GetOrgID(ctx context.Context) string {
+	id := GetIdentity(ctx)
+	return id.Identity.OrgID
+}
+
 // WithIdentity returns a copy of context with identity header as a value.
 func WithIdentity(ctx context.Context, id XRHID) context.Context {
 	return context.WithValue(ctx, parsedKey, id)
