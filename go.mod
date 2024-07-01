@@ -17,7 +17,7 @@ require (
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/go-chi/chi/v5 v5.0.14
+	github.com/go-chi/chi/v5 v5.1.0
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
