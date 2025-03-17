@@ -1,18 +1,18 @@
 module github.com/redhatinsights/platform-go-middlewares/v2
 
 go 1.20
+toolchain go1.24.1
 
 require (
 	github.com/aws/aws-sdk-go v1.55.5
 	github.com/onsi/ginkgo v1.16.5
-	github.com/onsi/gomega v1.34.1
+	github.com/onsi/gomega v1.36.2
 	github.com/sirupsen/logrus v1.9.3
 	go.uber.org/zap v1.27.0
 )
 
 require (
 	github.com/google/go-cmp v0.6.0 // indirect
-	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
 
