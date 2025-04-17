@@ -1,9 +1,9 @@
 module github.com/redhatinsights/platform-go-middlewares/v2
 
-go 1.20
+go 1.23
 
 require (
-	github.com/aws/aws-sdk-go v1.55.5
+	github.com/aws/aws-sdk-go v1.55.6
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.34.1
 	github.com/sirupsen/logrus v1.9.3
@@ -18,7 +18,7 @@ require (
 
 require (
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
-	github.com/go-chi/chi/v5 v5.1.0
+	github.com/go-chi/chi/v5 v5.2.1
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/nxadm/tail v1.4.11 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
