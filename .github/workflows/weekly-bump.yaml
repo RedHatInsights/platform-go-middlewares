@@ -1,0 +1,19 @@
+name: "Weekly gobump"
+on:
+  schedule:
+    - cron: '13 13 * * SUN'
+  workflow_dispatch:
+
+jobs:
+  bump-deps-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run gobump-deps action
+        uses: ./
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          exec: "go test ./..."
+          labels: "gobump"
