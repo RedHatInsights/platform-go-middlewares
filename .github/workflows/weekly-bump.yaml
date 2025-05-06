@@ -12,7 +12,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run gobump-deps action
-        uses: ./
+        uses: lzap/gobump@main
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           exec: "go test ./..."
