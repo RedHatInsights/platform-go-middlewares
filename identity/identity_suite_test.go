@@ -60,7 +60,8 @@ var serviceAccountIdentity = `
     "org_id": "1979710",
     "service_account": {
       "client_id": "0000",
-      "username": "jdoe"
+      "username": "jdoe",
+      "user_id": "5d16465b-c0be-4cf6-a26f-084ebbc5e67d"
     },
     "type": "ServiceAccount"
   }
@@ -303,6 +304,7 @@ var _ = Describe("Identity", func() {
 					Expect(id.Identity.Type).To(Equal("ServiceAccount"))
 					Expect(id.Identity.ServiceAccount.Username).To(Equal("jdoe"))
 					Expect(id.Identity.ServiceAccount.ClientId).To(Equal("0000"))
+					Expect(id.Identity.ServiceAccount.UserId).To(Equal("5d16465b-c0be-4cf6-a26f-084ebbc5e67d"))
 				}
 				return http.HandlerFunc(fn)
 			}())
