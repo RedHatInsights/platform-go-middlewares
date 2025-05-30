@@ -83,6 +83,7 @@ type X509 struct {
 type ServiceAccount struct {
 	ClientId string `json:"client_id"`
 	Username string `json:"username"`
+	UserId   string `json:"user_id"`
 }
 
 // System is the "system" field of an XRHID
