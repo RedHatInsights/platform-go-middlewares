@@ -6,29 +6,23 @@ Common Go code for the `console.redhat.com` open-source platform.
 
 [![Go Reference](https://pkg.go.dev/badge/github.com/redhatinsights/platform-go-middlewares.svg)](https://pkg.go.dev/github.com/redhatinsights/platform-go-middlewares)
 
-### Stable version: v1
+### Stable version: v2
+
+Usage:
+
+    go get github.com/redhatinsights/platform-go-middlewares/v2
+
+Branch name: **master**
+
+### Deprecated version: v1
 
 Usage:
 
     go get github.com/redhatinsights/platform-go-middlewares
 
-Non Go-modules users need to explicitly pull required version:
-
-    go get github.com/redhatinsights/platform-go-middlewares@1.0.0
-
-The stable version is frozen now and we only accept security or high-important bugfixes.
+The version is frozen now and we only accept security or high-important bugfixes.
 
 Branch name: **v1**
-
-### Experimental version: v2
-
-Usage:
-
-    go get github.com/redhatinsights/platform-go-middlewares@master
-
-We are working on cleaning the API and making it more robust and flexible.
-
-Branch name: **master**
 
 ### Major changes (upgrading)
 
