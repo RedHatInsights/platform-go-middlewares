@@ -3,7 +3,7 @@ module github.com/redhatinsights/platform-go-middlewares/v2
 go 1.21
 
 require (
-	github.com/aws/aws-sdk-go v1.55.6
+	github.com/aws/aws-sdk-go v1.55.8
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.34.1
 	github.com/sirupsen/logrus v1.9.3
